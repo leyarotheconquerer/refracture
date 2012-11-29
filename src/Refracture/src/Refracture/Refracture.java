@@ -1,12 +1,7 @@
 package Refracture;
 
 import com.jme3.app.SimpleApplication;
-import com.jme3.material.Material;
-import com.jme3.math.ColorRGBA;
-import com.jme3.math.Vector3f;
 import com.jme3.renderer.RenderManager;
-import com.jme3.scene.Geometry;
-import com.jme3.scene.shape.Box;
 
 /**
  * This is the base class for the entire game, Refracture.
@@ -27,14 +22,7 @@ public class Refracture extends SimpleApplication {
 
     @Override
     public void simpleInitApp() {
-        Box b = new Box(Vector3f.ZERO, 1, 1, 1);
-        Geometry geom = new Geometry("Box", b);
-
-        Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        mat.setColor("Color", ColorRGBA.Blue);
-        geom.setMaterial(mat);
-
-        rootNode.attachChild(geom);
+        flyCam.setMoveSpeed(50);
         
         //Initialize the in-game application state
         //(Note: This will cause the initialize() function to run in GameAppState)

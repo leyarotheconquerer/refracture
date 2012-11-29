@@ -1,4 +1,4 @@
-package Refracture;
+package Refracture.Controls;
 
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
@@ -7,10 +7,10 @@ import com.jme3.scene.control.AbstractControl;
 import com.jme3.scene.control.Control;
 
 /**
- * Defines the behavior of an earthquake generator.
+ * Defines the behavior of a refracting object.
  * @author Hazen
  */
-public class EarthquakeGenerator extends AbstractControl {
+public class Refracting extends AbstractControl {
 
     @Override
     protected void controlUpdate(float tpf) {

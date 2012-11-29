@@ -9,12 +9,11 @@ import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
-import com.jme3.scene.shape.Box;
 import com.jme3.terrain.geomipmap.TerrainQuad;
-import com.jme3.terrain.heightmap.HeightMap;
-import com.jme3.terrain.heightmap.HillHeightMap;
+import com.jme3.terrain.heightmap.AbstractHeightMap;
+import com.jme3.terrain.heightmap.ImageBasedHeightMap;
+import com.jme3.texture.Texture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,10 +36,6 @@ public class GameAppState extends AbstractAppState {
     
     /** The map parent node. */
     Node map;
-        /** Terrain that is influenced by earthquakes. */
-        Node destructibleTerrain;
-        /** Terrain that is not influenced by earthquakes. */
-        Node indestructibleTerrain;
     
     @Override
     public void initialize(AppStateManager stateManager, Application app)
@@ -52,29 +47,30 @@ public class GameAppState extends AbstractAppState {
         
         //Load the nodes
         
+        /**
+         * A pointer to the current position in the scene graph.
+         * Initialized to the root node.
+         */
+        Node iterator = this.app.getRootNode();
+        
         //Load the lights
         makeSun();
         
         //Load the map structure
         logger.log(Level.INFO, "Creating map nodes");
         map = new Node("map");
-        this.app.getRootNode().attachChild(map);
-        //Add sub-nodes
-        destructibleTerrain = new Node("destructibleTerrain");
-        map.attachChild(destructibleTerrain);
+        iterator.attachChild(map);
         
-        indestructibleTerrain = new Node("indestructibleTerrain");
-        map.attachChild(indestructibleTerrain);
+        //Fill in the children of "map"
+        iterator = (Node)iterator.getChild("map");
+        iterator.attachChild(new Node("destructibleTerrain"));
+        iterator.attachChild(new Node("indestructibleTerrain"));
         
-        indestructibleTerrain.attachChild(makeTerrain());
-        
-        /*Box b = new Box(new Vector3f(0,0,0),2f,0.1f,2f);
-        Geometry cube = new Geometry("Test Cube", b);
-        Material mat = new Material(this.app.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
-        mat.setColor("Color", ColorRGBA.Orange);
-        cube.setMaterial(mat);
-        cube.setLocalTranslation(new Vector3f(0,-1f,0));
-        indestructibleTerrain.attachChild(cube);*/
+        //Fill in the children of "indestructibleTerrain"
+        iterator = (Node)iterator.getChild("indestructibleTerrain");
+        iterator.attachChild(makeTerrain());
+        iterator.getChild("Terrain").setLocalTranslation(
+                new Vector3f(0,-30f,0));
         
         logger.log(Level.INFO, "GameAppState initialize not fully implemented.");
     }
@@ -116,14 +112,30 @@ public class GameAppState extends AbstractAppState {
         TerrainQuad terrain;
         
         try {
+            
             //Generate the height map
-            HeightMap heightMap = new HillHeightMap(257, 100, 30, 50);
+            AbstractHeightMap heightMap = null;
+            Texture heightImage = this.app.getAssetManager().loadTexture("Textures/MapTest2.jpg");
+            heightMap = new ImageBasedHeightMap(heightImage.getImage(), 0.25f);
+            heightMap.load();
             
             //Get the material
             Material mat = new Material(this.app.getAssetManager(),
-                    "Common/MatDefs/Light/Lighting.j3md");
-            mat.setTexture("ColorMap",
-                    this.app.getAssetManager().loadTexture("MapTest.png"));
+                    "Common/MatDefs/Terrain/Terrain.j3md");
+            mat.setTexture("Alpha",
+                    this.app.getAssetManager().loadTexture("Textures/MapTest.png"));
+            
+            Texture ground = this.app.getAssetManager().loadTexture("Textures/GroundTest.png");
+            ground.setWrap(Texture.WrapMode.Repeat);
+            mat.setTexture("Tex1", ground);
+            
+            Texture grass1 = this.app.getAssetManager().loadTexture("Textures/GrassTest.png");
+            grass1.setWrap(Texture.WrapMode.Repeat);
+            mat.setTexture("Tex2", grass1);
+            
+            Texture grass2 = this.app.getAssetManager().loadTexture("Textures/GrassTest2.png");
+            grass2.setWrap(Texture.WrapMode.Repeat);
+            mat.setTexture("Tex3", grass2);
             
             //Create the terrain object
             terrain = new TerrainQuad("Terrain", 64, 257, heightMap.getHeightMap());

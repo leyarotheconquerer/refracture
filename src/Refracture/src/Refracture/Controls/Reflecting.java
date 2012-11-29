@@ -1,4 +1,4 @@
-package Refracture;
+package Refracture.Controls;
 
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
@@ -7,12 +7,10 @@ import com.jme3.scene.control.AbstractControl;
 import com.jme3.scene.control.Control;
 
 /**
- * Defines the behavior of a building
- * 
- * This includes defenses.
+ * Defines the behavior of a reflecting object.
  * @author Hazen
  */
-public class Building extends AbstractControl{
+public class Reflecting extends AbstractControl {
 
     @Override
     protected void controlUpdate(float tpf) {
