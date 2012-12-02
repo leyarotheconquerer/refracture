@@ -11,7 +11,17 @@ import com.jme3.scene.control.Control;
  * @author Hazen
  */
 public class Health extends AbstractControl {
+    int health;
 
+    // Function of struck object taking damage
+    public void takeDamage(int Strength){
+	throw new UnsupportedOperationException("Not coded yet.");
+    }
+    //Function to repair object's health
+    public void repair(int repairStrength){
+	throw new UnsupportedOperationException("Not coded yet.");
+    }
+	
     @Override
     protected void controlUpdate(float tpf) {
         throw new UnsupportedOperationException("Not supported yet.");
