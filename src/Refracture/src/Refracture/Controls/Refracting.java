@@ -10,7 +10,7 @@ import com.jme3.scene.control.Control;
  * Defines the behavior of a refracting object.
  * @author Hazen
  */
-public class Refracting extends AbstractControl {
+public class Refracting extends Hittable{
 
     @Override
     protected void controlUpdate(float tpf) {
@@ -26,4 +26,8 @@ public class Refracting extends AbstractControl {
         throw new UnsupportedOperationException("Not supported yet.");
     }
     
+	//The Function of that the Refracting SeisMantle does When hit by seismic waves
+    public void Hit( boolean hit, String earthquakeX, String rayX) {
+	throw new UnsupportedOperationException("Not Coded yet");
+	} 
 }

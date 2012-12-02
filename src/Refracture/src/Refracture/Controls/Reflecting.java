@@ -10,7 +10,7 @@ import com.jme3.scene.control.Control;
  * Defines the behavior of a reflecting object.
  * @author Hazen
  */
-public class Reflecting extends AbstractControl {
+public class Reflecting extends Hittable{
 
     @Override
     protected void controlUpdate(float tpf) {
@@ -25,5 +25,11 @@ public class Reflecting extends AbstractControl {
     public Control cloneForSpatial(Spatial spatial) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+
+
+	//The Function of that the Reflective SeisMantle does When hit by seismic waves
+    public void Hit( boolean hit, String earthquakeX, String rayX) {
+	throw new UnsupportedOperationException("Not Coded yet");
+	} 
     
 }
