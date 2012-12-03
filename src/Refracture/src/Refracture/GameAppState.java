@@ -4,22 +4,14 @@ import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
-import com.jme3.bullet.collision.shapes.CollisionShape;
-import com.jme3.bullet.control.RigidBodyControl;
-import com.jme3.bullet.util.CollisionShapeFactory;
-import com.jme3.collision.CollisionResult;
-import com.jme3.collision.CollisionResults;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.Ray;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.debug.WireBox;
 import com.jme3.terrain.geomipmap.TerrainQuad;
 import com.jme3.terrain.heightmap.AbstractHeightMap;
 import com.jme3.terrain.heightmap.ImageBasedHeightMap;
@@ -52,6 +44,9 @@ public class GameAppState extends AbstractAppState {
     
     /** The earthquake parent node. */
     Node earthquakeRoot;
+    
+    /** The terrain object containing the heights of the map */
+    TerrainQuad terrain;
     
     @Override
     public void initialize(AppStateManager stateManager, Application app)
@@ -92,7 +87,8 @@ public class GameAppState extends AbstractAppState {
         
         //Fill in the children of "indestructibleTerrain"
         iterator = (Node)iterator.getChild("indestructibleTerrain");
-        iterator.attachChild(makeTerrain("terrain"));
+        terrain = makeTerrain("terrain");
+        iterator.attachChild(terrain);
         iterator.getChild("terrain").setLocalTranslation(
                 new Vector3f(0,-30f,0));
         
@@ -180,7 +176,7 @@ public class GameAppState extends AbstractAppState {
     /**
      * Defines the map terrain.
      */
-    private Node makeTerrain(String name)
+    private TerrainQuad makeTerrain(String name)
     {
         TerrainQuad terrain;
         
@@ -248,39 +244,27 @@ public class GameAppState extends AbstractAppState {
         building.setMaterial(mat);
         
         //Move the building onto the terrain
-        /*
-        //Commented out so that I can test some stuffs for placement
-        logger.log(Level.INFO, "Finding ground collision of {0}", name);
-        Ray ray = new Ray(localTranslation,
-                new Vector3f(0,-1f,0).normalizeLocal());
-        CollisionResults results = new CollisionResults();
-        this.app.getRootNode().collideWith(ray, results);
-        
-        for (int i = 0; i < results.size(); i++) {
-            String object = results.getCollision(i).getGeometry().getName();
-            Vector3f point = results.getCollision(i).getContactPoint();
-            logger.log(Level.INFO, "Collision at {0} with {1}",
-                    new Object[]{point.toString(), object});
-        }
-        
-        CollisionResult closest = results.getClosestCollision();
-        logger.log(Level.INFO, "Moving {0} to {1}",
-                new Object[]{name, closest.getContactPoint().toString()});
-        building.setLocalTranslation(closest.getContactPoint());
-        //*/
-        
-        logger.setLevel(Level.FINE);
-        
-        logger.log(Level.INFO, "Trying to put the building on the ground");
-        float x, y, z;
-        x = localTranslation.x;
-        z = localTranslation.z;
-        float height = terrain.getHeightmapHeight(new Vector2f(x,z));
-        y = terrain.getLocalTranslation().y + height;
-        logger.log(Level.INFO, "Putting the building at ({0}, {1}, {2}) where {1} = {4} - {3}",
-                new Object[]{x,y,z,height, terrain.getLocalTranslation().y});
-        building.setLocalTranslation(new Vector3f(x,y,z));
+        building.setLocalTranslation(getGroundHeight(localTranslation));
         
         return building;
+    }
+    
+    //General functions
+    //This section contains general functions that are used by other functions
+    //in the GameAppState.
+    
+    /**
+     * Find the height of the terrain at a given point.
+     * @param location A 3D vector referencing an (x,z) position on the map.
+     * @return A 3D vector pointing to the point surface point on the map at the
+     * (x,z) position on the map
+     */
+    private Vector3f getGroundHeight(Vector3f location)
+    {
+        return new Vector3f(
+                location.x,
+                terrain.getLocalTranslation().y + 
+                    terrain.getHeightmapHeight(new Vector2f(location.x, location.z)),
+                location.z);
     }
 }
