@@ -14,6 +14,7 @@ import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Ray;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
@@ -54,7 +55,7 @@ public class GameAppState extends AbstractAppState {
     
     @Override
     public void initialize(AppStateManager stateManager, Application app)
-    {   
+    {
         super.initialize(stateManager, app);
         
         //Store the passed in application
@@ -69,6 +70,12 @@ public class GameAppState extends AbstractAppState {
          * Initialized to the root node.
          */
         Node iterator = this.app.getRootNode();
+        
+        /**
+         * A test variable that I'm sure is destined to be used for always and
+         * eternity.
+         */
+        Node parameter = this.app.getRootNode();
         
         //Load the lights
         makeSun();
@@ -104,7 +111,10 @@ public class GameAppState extends AbstractAppState {
         
         //Fill in the children of "other"
         iterator = (Node) iterator.getChild("other");
-        iterator.attachChild(makeTestBuilding(new Vector3f(0,0,0), "testBuilding"));
+        parameter = (Node) this.app.getRootNode().getChild("mapRoot");
+        parameter = (Node) parameter.getChild("indestructibleTerrain");
+        iterator.attachChild(makeTestBuilding(new Vector3f(0,0,0), "testBuilding",
+                (TerrainQuad) parameter.getChild("terrain")));
         
         //Reset the iterator
         iterator = this.app.getRootNode();
@@ -223,7 +233,7 @@ public class GameAppState extends AbstractAppState {
     /**
      * Loads a test building and places it.
      */
-    private Spatial makeTestBuilding(Vector3f localTranslation, String name)
+    private Spatial makeTestBuilding(Vector3f localTranslation, String name, TerrainQuad terrain)
     {
         //Load the model
         Spatial building = this.app.getAssetManager().loadModel("Models/testbuilding.j3o");
@@ -238,6 +248,8 @@ public class GameAppState extends AbstractAppState {
         building.setMaterial(mat);
         
         //Move the building onto the terrain
+        /*
+        //Commented out so that I can test some stuffs for placement
         logger.log(Level.INFO, "Finding ground collision of {0}", name);
         Ray ray = new Ray(localTranslation,
                 new Vector3f(0,-1f,0).normalizeLocal());
@@ -255,6 +267,19 @@ public class GameAppState extends AbstractAppState {
         logger.log(Level.INFO, "Moving {0} to {1}",
                 new Object[]{name, closest.getContactPoint().toString()});
         building.setLocalTranslation(closest.getContactPoint());
+        //*/
+        
+        logger.setLevel(Level.FINE);
+        
+        logger.log(Level.INFO, "Trying to put the building on the ground");
+        float x, y, z;
+        x = localTranslation.x;
+        z = localTranslation.z;
+        float height = terrain.getHeightmapHeight(new Vector2f(x,z));
+        y = terrain.getLocalTranslation().y + height;
+        logger.log(Level.INFO, "Putting the building at ({0}, {1}, {2}) where {1} = {4} - {3}",
+                new Object[]{x,y,z,height, terrain.getLocalTranslation().y});
+        building.setLocalTranslation(new Vector3f(x,y,z));
         
         return building;
     }
