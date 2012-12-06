@@ -16,12 +16,20 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.control.AbstractControl;
 import com.jme3.scene.control.Control;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This control defines the motion of the camera.
  * @author Hazen
  */
 public class Camera extends AbstractControl {
+    
+    /**
+     * Here's me placing a logger in here says Hazen...
+     * just cluttering code. Hope you enjoy the mess.
+     */
+    private final static Logger logger = Logger.getLogger(Camera.class.getName());
     
     /** Flags indicating motion along each axis */
     boolean moveX = false;
@@ -47,21 +55,31 @@ public class Camera extends AbstractControl {
     }
 
     public void enableMoveX(Directions horizDir) {
+        this.setEnabled(true);
         this.moveX = true;
-        this.horizDir = vertDir;
+        this.horizDir = horizDir;
     }
 
     public void enableMoveY(Directions vertDir) {
+        this.setEnabled(true);
         this.moveY = true;
         this.vertDir = vertDir;
     }
     
     public void disableMoveY() {
         this.moveY = false;
+        if(!moveX)
+        {
+            this.enabled = false;
+        }
     }
     
     public void disableMoveX() {
         this.moveX = false;
+        if(!moveY)
+        {
+            this.enabled = false;
+        }
     }
 
     @Override
@@ -73,11 +91,11 @@ public class Camera extends AbstractControl {
         {
             if(horizDir == Directions.LEFT)
             {
-                camMove.addLocal(new Vector3f(-1f, 0, 0));
+                camMove.addLocal(new Vector3f(1f, 0, 0));
             }
             else
             {
-                camMove.addLocal(new Vector3f(1f, 0, 0));
+                camMove.addLocal(new Vector3f(-1f, 0, 0));
             }
         }
         
@@ -94,9 +112,11 @@ public class Camera extends AbstractControl {
         }
         
         //Scale the camera motion by the frame rate
-        camMove.normalizeLocal().multLocal(tpf*10);
+        camMove.normalizeLocal().multLocal(tpf*100);
         
-         getSpatial().setLocalTranslation(camMove);
+        logger.log(Level.INFO, "And I''m moving this much {0}", camMove.toString());
+        
+         getSpatial().move(camMove);
         
     }
     

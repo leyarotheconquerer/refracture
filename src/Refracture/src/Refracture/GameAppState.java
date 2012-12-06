@@ -165,7 +165,10 @@ public class GameAppState extends AbstractAppState {
     @Override
     public void update(float tpf)
     {
-        logger.log(Level.INFO, "Updating the in-game state");
+        //Update the camera location based on mouse movement
+        updateCamera();
+        
+        //logger.log(Level.INFO, "Updating the in-game state");
     }
     
     //Loading section
@@ -212,7 +215,7 @@ public class GameAppState extends AbstractAppState {
         app.getRootNode().attachChild(camNode);
         
         //Set the initial position of the camera
-        camNode.setLocalTranslation(0, 0f, -10f);
+        camNode.setLocalTranslation(0, 50f, -10f);
         
         //Set the initial rotation of the camera
         camNode.setLocalRotation(new Quaternion().fromAngleAxis(
@@ -337,83 +340,55 @@ public class GameAppState extends AbstractAppState {
     };
     
     /**
-     * Handles analog events such as movement of the mouse.
-     */
-    AnalogListener analogListener = new AnalogListener() {
-
-        public void onAnalog(String name, float value, float tpf) {
-            Vector2f click2d = app.getInputManager().getCursorPosition();
-            int margin = 50;
-            
-            //Detect horizontal mouse movement
-            if(name.equals("MouseLeft"))
-            {
-                logger.log(Level.INFO, "You moved Left!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-                logger.log(Level.INFO, "Moved at this location {0}", new Object[]{click2d});
-                if(click2d.x < margin)
-                {
-                    logger.log(Level.INFO, "You did it in the margin. Yeah!");
-                    camNode.getControl(Camera.class).enableMoveX(Directions.LEFT);
-                }
-            }
-            else if(name.equals("MouseRight"))
-            {
-                if(click2d.x > app.getCamera().getWidth() - margin)
-                {
-                    camNode.getControl(Camera.class).enableMoveX(Directions.RIGHT);
-                }
-            }
-            
-            //Detect vertical mouse movement
-            if(name.equals("MouseUp"))
-            {
-                if(click2d.y < margin)
-                {
-                    camNode.getControl(Camera.class).enableMoveX(Directions.UP);
-                }
-            }
-            else if(name.equals("MouseDown"))
-            {
-                if(click2d.y > app.getCamera().getHeight() - margin)
-                {
-                    camNode.getControl(Camera.class).enableMoveX(Directions.DOWN);
-                }
-            }
-            
-            //Reset camera movement if any mouse movement is detected out of margins
-            if(name.matches("Mouse.*"))
-            {
-                //Check horizontal margins
-                if(click2d.x > margin && click2d.x < app.getCamera().getWidth() - margin)
-                {
-                    camNode.getControl(Camera.class).disableMoveX();
-                }
-                
-                //Check vertical margins
-                if(click2d.y > margin && click2d.y < app.getCamera().getHeight() - margin)
-                {
-                    camNode.getControl(Camera.class).disableMoveY();
-                }
-            }
-        }
-    };
-    
-    /**
      * Register the input devices with the input manager.
      */
     private void initKeys()
     {
         InputManager inputManager = this.app.getInputManager();
         inputManager.addMapping("Click", new KeyTrigger(MouseInput.BUTTON_LEFT));
-        inputManager.addMapping("MouseLeft", new MouseAxisTrigger(MouseInput.AXIS_X, false));
-        inputManager.addMapping("MouseRight", new MouseAxisTrigger(MouseInput.AXIS_X, true));
-        inputManager.addMapping("MouseUp", new MouseAxisTrigger(MouseInput.AXIS_Y, true));
-        inputManager.addMapping("MouseDown", new MouseAxisTrigger(MouseInput.AXIS_Y, false));
         
         inputManager.addListener(actionListener, new String[]{
             "Click"});
-        inputManager.addListener(analogListener, new String[]{
-            "MouseLeft", "MouseRight", "MouseUp", "MouseDown"});
+    }
+    
+    /**
+     * Updates the camera location based on the mouse location.
+     */
+    private void updateCamera()
+    {
+        //Get the mouse position as a 2D vector
+        Vector2f click2d = app.getInputManager().getCursorPosition();
+        int margin = 50;
+        
+        //logger.log(Level.INFO, "Mouse at {0}",
+                //new Object[]{click2d});
+        
+        //Check the margins
+        if(click2d.x < margin) //Going left
+        {
+            camNode.getControl(Camera.class).enableMoveX(Directions.LEFT);
+        }
+        else if(click2d.x > app.getCamera().getWidth() - margin) //Going right
+        {
+            camNode.getControl(Camera.class).enableMoveX(Directions.RIGHT);
+        }
+        else //Not horizontally moving
+        {
+            camNode.getControl(Camera.class).disableMoveX();
+        }
+        
+        if(click2d.y < margin) //Going up
+        {
+            camNode.getControl(Camera.class).enableMoveY(Directions.UP);
+        }
+        else if(click2d.y > app.getCamera().getHeight() - margin) //Going down
+        {
+            camNode.getControl(Camera.class).enableMoveY(Directions.DOWN);
+        }
+        else //Not vertically moving
+        {
+            camNode.getControl(Camera.class).disableMoveY();
+        }
     }
     
     /**
