@@ -1,31 +1,33 @@
 package Refracture;
 
+import Refracture.Controls.Camera;
+import Refracture.Misc.Directions;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
-import com.jme3.bullet.collision.shapes.CollisionShape;
-import com.jme3.bullet.control.RigidBodyControl;
-import com.jme3.bullet.util.CollisionShapeFactory;
-import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
 import com.jme3.input.InputManager;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
+import com.jme3.input.controls.MouseAxisTrigger;
+import com.jme3.input.event.MouseMotionEvent;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Quaternion;
+import com.jme3.math.Ray;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.CameraNode;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.terrain.geomipmap.TerrainQuad;
 import com.jme3.terrain.heightmap.AbstractHeightMap;
 import com.jme3.terrain.heightmap.ImageBasedHeightMap;
 import com.jme3.texture.Texture;
-import com.sun.accessibility.internal.resources.accessibility;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -51,6 +53,9 @@ public class GameAppState extends AbstractAppState {
     
     /** The building parent node. */
     Node buildingRoot;
+    
+    /** The camera node. */
+    CameraNode camNode;
     
     /** The earthquake parent node. */
     Node earthquakeRoot;
@@ -87,6 +92,9 @@ public class GameAppState extends AbstractAppState {
         
         //Load the lights
         makeSun();
+        
+        //Load the camera
+        makeCamera();
         
         //Load the map structure////////////////////////////////////////////////
         logger.log(Level.INFO, "Creating map nodes");
@@ -184,6 +192,33 @@ public class GameAppState extends AbstractAppState {
         this.app.getRootNode().addLight(ambient);
     }
     
+    /**
+     * Defines the position and parent node of the camera.
+     */
+    private void makeCamera()
+    {
+        //Disable the first person camera
+        app.getFlyByCamera().setEnabled(false);
+        app.getInputManager().setCursorVisible(true);
+        
+        //Create the camera node to control the camera
+        camNode = new CameraNode("cameraNode", app.getCamera());
+        
+        //Add motion control to the camera
+        camNode.addControl(new Camera());
+        
+        //Add the camera control to the root node
+        app.getRootNode().attachChild(camNode);
+        
+        //Set the initial position of the camera
+        camNode.setLocalTranslation(0, 0f, -10f);
+        
+        //Set the initial rotation of the camera
+        camNode.setLocalRotation(new Quaternion().fromAngleAxis(
+                (float) (Math.PI / 3),
+                new Vector3f(1f, 0, 0)));
+    }
+    
      //Map Definitions//////////////////////////////////////////////////////////
     
     /**
@@ -262,17 +297,21 @@ public class GameAppState extends AbstractAppState {
         return building;
     }
     
-<<<<<<< HEAD
+    //General functions
+    //This section contains general functions that are used by other functions
+    //in the GameAppState.
+    
     ActionListener actionListener = new ActionListener() {
 
         public void onAction(String name, boolean isPressed, float tpf) {
+            Vector2f click2d = app.getInputManager().getCursorPosition();
+            
             if(isPressed)
             {
                 if(name.equals("Click"))
                 {
                     CollisionResults results = new CollisionResults();
                     
-                    Vector2f click2d = app.getInputManager().getCursorPosition();
                     Vector3f click3d = app.getCamera().getWorldCoordinates(
                             new Vector2f(click2d.x, click2d.y),0).clone();
                     Vector3f dir = app.getCamera().getWorldCoordinates(
@@ -288,22 +327,58 @@ public class GameAppState extends AbstractAppState {
                     }
                 }
             }
+            
+            int margin = 50;
+            
+            if(name.equals("MouseLeft"))
+            {
+                logger.log(Level.INFO, "You moved Left!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                if(click2d.x < margin)
+                {
+                    logger.log(Level.INFO, "You did it in the margin. Yeah!");
+                    camNode.getControl(Camera.class).enableMoveX(Directions.LEFT);
+                }
+            }
+            else if(name.equals("MouseRight"))
+            {
+                if(click2d.x > app.getCamera().getWidth() - margin)
+                {
+                    camNode.getControl(Camera.class).enableMoveX(Directions.RIGHT);
+                }
+            }
+            
+            if(name.equals("MouseUp"))
+            {
+                if(click2d.y < margin)
+                {
+                    camNode.getControl(Camera.class).enableMoveX(Directions.UP);
+                }
+            }
+            else if(name.equals("MouseDown"))
+            {
+                if(click2d.y > app.getCamera().getWidth() - margin)
+                {
+                    camNode.getControl(Camera.class).enableMoveX(Directions.DOWN);
+                }
+            }
         }
     };
     
+    /**
+     * Register the input devices with the input manager.
+     */
     private void initKeys()
     {
         InputManager inputManager = this.app.getInputManager();
         inputManager.addMapping("Click", new KeyTrigger(MouseInput.BUTTON_LEFT));
-        inputManager.setCursorVisible(true);
+        inputManager.addMapping("MouseLeft", new MouseAxisTrigger(MouseInput.AXIS_X, false));
+        inputManager.addMapping("MouseRight", new MouseAxisTrigger(MouseInput.AXIS_X, true));
+        inputManager.addMapping("MouseUp", new MouseAxisTrigger(MouseInput.AXIS_Y, true));
+        inputManager.addMapping("MouseDown", new MouseAxisTrigger(MouseInput.AXIS_Y, false));
         
-        inputManager.addListener(actionListener, new String[]{"Click"});
-	}
-
-
-    //General functions
-    //This section contains general functions that are used by other functions
-    //in the GameAppState.
+        inputManager.addListener(actionListener, new String[]{
+            "Click", "MouseLeft", "MouseRight", "MouseUp", "MouseDown"});
+    }
     
     /**
      * Find the height of the terrain at a given point.
