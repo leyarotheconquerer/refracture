@@ -6,6 +6,7 @@ import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
+import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
 import com.jme3.input.InputManager;
 import com.jme3.input.MouseInput;
@@ -102,6 +103,15 @@ public class GameAppState extends AbstractAppState {
         //Load the camera
         makeCamera();
         
+        //Load the mouse node
+        //iterator.attachChild(new Node("mouseNode"));
+        Node temp = new Node("mouseNode");
+        iterator.attachChild(temp);
+        Geometry marker = new Geometry("markerSphere", new Sphere(8,8,1));
+        marker.setMaterial(new Material(app.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md"));
+        marker.getMaterial().setColor("Color", ColorRGBA.Blue);
+        temp.attachChild(marker);
+        
         //Load the map structure////////////////////////////////////////////////
         logger.log(Level.INFO, "Creating map nodes");
         mapRoot = new Node("mapRoot");
@@ -172,6 +182,9 @@ public class GameAppState extends AbstractAppState {
     {
         //Update the camera location based on mouse movement
         updateCamera();
+        
+        //Update the mouse picking location in 3D space
+        updateMouse();
         
         //logger.log(Level.INFO, "Updating the in-game state");
     }
@@ -316,7 +329,7 @@ public class GameAppState extends AbstractAppState {
             {
                 if(name.equals("Click"))
                 {
-                    CollisionResults results = new CollisionResults();
+                    /*CollisionResults results = new CollisionResults();
                     
                     Vector2f click2d = app.getInputManager().getCursorPosition();
                     Vector3f click3d = app.getCamera().getWorldCoordinates(
@@ -342,7 +355,7 @@ public class GameAppState extends AbstractAppState {
                     mat.setColor("Color", ColorRGBA.Green);
                     geom.setMaterial(mat);
                     geom.setLocalTranslation(results.getClosestCollision().getContactPoint());
-                    app.getRootNode().attachChild(geom);
+                    app.getRootNode().attachChild(geom);*/
                 }
             }
         }
@@ -398,6 +411,37 @@ public class GameAppState extends AbstractAppState {
         {
             camNode.getControl(Camera.class).disableMoveY();
         }
+    }
+    
+    /**
+     * Updates the point at which the mouse points in the scene graph.
+     */
+    private void updateMouse()
+    {
+        CollisionResults results = new CollisionResults();
+                    
+        Vector2f click2d = app.getInputManager().getCursorPosition();
+        Vector3f click3d = app.getCamera().getWorldCoordinates(
+                new Vector2f(click2d.x, click2d.y),0).clone();
+        Vector3f dir = app.getCamera().getWorldCoordinates(
+                new Vector2f(click2d.x, click2d.y), 1f).subtractLocal(click3d).normalizeLocal();
+
+        Ray ray = new Ray(click3d, dir);
+
+        app.getRootNode().collideWith(ray, results);
+        
+        CollisionResult result = new CollisionResult();
+        
+        for (int i = 0; i < results.size(); i++) {
+            if(!results.getCollision(i).getGeometry().getName().equals("markerSphere"))
+            {
+                result = results.getCollision(i);
+                break;
+            }
+        }
+        
+        app.getRootNode().getChild("mouseNode").setLocalTranslation(
+                result.getContactPoint());
     }
     
     /**
