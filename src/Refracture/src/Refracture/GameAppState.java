@@ -13,6 +13,7 @@ import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseAxisTrigger;
+import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.input.event.MouseMotionEvent;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
@@ -23,8 +24,12 @@ import com.jme3.math.Ray;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.CameraNode;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.shape.Box;
+import com.jme3.scene.shape.Line;
+import com.jme3.scene.shape.Sphere;
 import com.jme3.terrain.geomipmap.TerrainQuad;
 import com.jme3.terrain.heightmap.AbstractHeightMap;
 import com.jme3.terrain.heightmap.ImageBasedHeightMap;
@@ -262,11 +267,6 @@ public class GameAppState extends AbstractAppState {
             terrain = new TerrainQuad(name, 64, 257, heightMap.getHeightMap());
             terrain.setMaterial(mat);
             
-            terrain.updateModelBound();
-            /*
-            WireBox geom = new WireBox();
-            geom.fromBoundingBox(terrain.getWorldBound());*/
-            
             return terrain;
         } catch (Exception ex) {
             Logger.getLogger(GameAppState.class.getName()).log(Level.SEVERE,
@@ -312,7 +312,6 @@ public class GameAppState extends AbstractAppState {
 
         public void onAction(String name, boolean isPressed, float tpf) {
             
-            
             if(isPressed)
             {
                 if(name.equals("Click"))
@@ -331,9 +330,19 @@ public class GameAppState extends AbstractAppState {
                     
                     logger.log(Level.INFO, "Doom destruction and collisions...");
                     for (int i = 0; i < results.size(); i++) {
-                        logger.log(Level.INFO, "Collision {0}",
-                                new Object[]{results.getCollision(i)});
+                        logger.log(Level.INFO, "Collision with {0} at {1} which is {2} units away",
+                                new Object[]{results.getCollision(i).getGeometry().getName(),
+                                        results.getCollision(i).getContactPoint(),
+                                        results.getCollision(i).getContactPoint().subtract(ray.origin).length()});
                     }
+                    
+                    Sphere marker = new Sphere(8, 8, 1);
+                    Geometry geom = new Geometry("MarkerSphere", marker);
+                    Material mat = new Material(app.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
+                    mat.setColor("Color", ColorRGBA.Green);
+                    geom.setMaterial(mat);
+                    geom.setLocalTranslation(results.getClosestCollision().getContactPoint());
+                    app.getRootNode().attachChild(geom);
                 }
             }
         }
@@ -345,7 +354,7 @@ public class GameAppState extends AbstractAppState {
     private void initKeys()
     {
         InputManager inputManager = this.app.getInputManager();
-        inputManager.addMapping("Click", new KeyTrigger(MouseInput.BUTTON_LEFT));
+        inputManager.addMapping("Click", new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
         
         inputManager.addListener(actionListener, new String[]{
             "Click"});
@@ -398,11 +407,11 @@ public class GameAppState extends AbstractAppState {
      * (x,z) position on the map
      */
     private Vector3f getGroundHeight(Vector3f location)
-    {
+    {   
         return new Vector3f(
                 location.x,
                 terrain.getLocalTranslation().y + 
-                    terrain.getHeightmapHeight(new Vector2f(location.x, location.z)),
+                    terrain.getHeight(new Vector2f(location.x, location.z)),
                 location.z);
     }
 }
