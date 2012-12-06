@@ -30,21 +30,25 @@ public class Camera extends AbstractControl {
     boolean moveY = false;
     Directions vertDir = Directions.UP;
 
-    public boolean isMoveX() {
-        return moveX;
+    public boolean isMoveLeft() {
+        return moveX && horizDir == Directions.LEFT;
+    }
+    
+    public boolean isMoveRight() {
+        return moveX && horizDir == Directions.RIGHT;
+    }
+    
+    public boolean isMoveUp() {
+        return moveY && vertDir == Directions.UP;
+    }
+    
+    public boolean isMoveDown() {
+        return moveY && vertDir == Directions.DOWN;
     }
 
     public void enableMoveX(Directions horizDir) {
         this.moveX = true;
         this.horizDir = vertDir;
-    }
-    
-    public void disableMoveX() {
-        this.moveX = false;
-    }
-
-    public boolean isMoveY() {
-        return moveY;
     }
 
     public void enableMoveY(Directions vertDir) {
@@ -54,6 +58,10 @@ public class Camera extends AbstractControl {
     
     public void disableMoveY() {
         this.moveY = false;
+    }
+    
+    public void disableMoveX() {
+        this.moveX = false;
     }
 
     @Override

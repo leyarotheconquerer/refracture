@@ -10,6 +10,7 @@ import com.jme3.collision.CollisionResults;
 import com.jme3.input.InputManager;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
+import com.jme3.input.controls.AnalogListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.event.MouseMotionEvent;
@@ -301,10 +302,13 @@ public class GameAppState extends AbstractAppState {
     //This section contains general functions that are used by other functions
     //in the GameAppState.
     
+    /**
+     * Handles one time input events such as clicking or pressing a key on the keyboard.
+     */
     ActionListener actionListener = new ActionListener() {
 
         public void onAction(String name, boolean isPressed, float tpf) {
-            Vector2f click2d = app.getInputManager().getCursorPosition();
+            
             
             if(isPressed)
             {
@@ -312,6 +316,7 @@ public class GameAppState extends AbstractAppState {
                 {
                     CollisionResults results = new CollisionResults();
                     
+                    Vector2f click2d = app.getInputManager().getCursorPosition();
                     Vector3f click3d = app.getCamera().getWorldCoordinates(
                             new Vector2f(click2d.x, click2d.y),0).clone();
                     Vector3f dir = app.getCamera().getWorldCoordinates(
@@ -323,16 +328,28 @@ public class GameAppState extends AbstractAppState {
                     
                     logger.log(Level.INFO, "Doom destruction and collisions...");
                     for (int i = 0; i < results.size(); i++) {
-                        logger.log(Level.INFO, "Collision {0}", new Object[]{results.getCollision(i)});
+                        logger.log(Level.INFO, "Collision {0}",
+                                new Object[]{results.getCollision(i)});
                     }
                 }
             }
-            
+        }
+    };
+    
+    /**
+     * Handles analog events such as movement of the mouse.
+     */
+    AnalogListener analogListener = new AnalogListener() {
+
+        public void onAnalog(String name, float value, float tpf) {
+            Vector2f click2d = app.getInputManager().getCursorPosition();
             int margin = 50;
             
+            //Detect horizontal mouse movement
             if(name.equals("MouseLeft"))
             {
                 logger.log(Level.INFO, "You moved Left!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                logger.log(Level.INFO, "Moved at this location {0}", new Object[]{click2d});
                 if(click2d.x < margin)
                 {
                     logger.log(Level.INFO, "You did it in the margin. Yeah!");
@@ -347,6 +364,7 @@ public class GameAppState extends AbstractAppState {
                 }
             }
             
+            //Detect vertical mouse movement
             if(name.equals("MouseUp"))
             {
                 if(click2d.y < margin)
@@ -356,9 +374,25 @@ public class GameAppState extends AbstractAppState {
             }
             else if(name.equals("MouseDown"))
             {
-                if(click2d.y > app.getCamera().getWidth() - margin)
+                if(click2d.y > app.getCamera().getHeight() - margin)
                 {
                     camNode.getControl(Camera.class).enableMoveX(Directions.DOWN);
+                }
+            }
+            
+            //Reset camera movement if any mouse movement is detected out of margins
+            if(name.matches("Mouse.*"))
+            {
+                //Check horizontal margins
+                if(click2d.x > margin && click2d.x < app.getCamera().getWidth() - margin)
+                {
+                    camNode.getControl(Camera.class).disableMoveX();
+                }
+                
+                //Check vertical margins
+                if(click2d.y > margin && click2d.y < app.getCamera().getHeight() - margin)
+                {
+                    camNode.getControl(Camera.class).disableMoveY();
                 }
             }
         }
@@ -377,7 +411,9 @@ public class GameAppState extends AbstractAppState {
         inputManager.addMapping("MouseDown", new MouseAxisTrigger(MouseInput.AXIS_Y, false));
         
         inputManager.addListener(actionListener, new String[]{
-            "Click", "MouseLeft", "MouseRight", "MouseUp", "MouseDown"});
+            "Click"});
+        inputManager.addListener(analogListener, new String[]{
+            "MouseLeft", "MouseRight", "MouseUp", "MouseDown"});
     }
     
     /**
