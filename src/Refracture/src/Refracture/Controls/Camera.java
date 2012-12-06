@@ -114,8 +114,6 @@ public class Camera extends AbstractControl {
         //Scale the camera motion by the frame rate
         camMove.normalizeLocal().multLocal(tpf*100);
         
-        logger.log(Level.INFO, "And I''m moving this much {0}", camMove.toString());
-        
          getSpatial().move(camMove);
         
     }
