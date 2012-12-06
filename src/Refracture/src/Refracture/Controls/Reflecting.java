@@ -1,9 +1,9 @@
 package Refracture.Controls;
 
+import Refracture.controls.Hittable;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.control.AbstractControl;
 import com.jme3.scene.control.Control;
 
 /**

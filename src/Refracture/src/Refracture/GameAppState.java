@@ -9,6 +9,10 @@ import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
+import com.jme3.input.InputManager;
+import com.jme3.input.MouseInput;
+import com.jme3.input.controls.ActionListener;
+import com.jme3.input.controls.KeyTrigger;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
@@ -24,6 +28,7 @@ import com.jme3.terrain.geomipmap.TerrainQuad;
 import com.jme3.terrain.heightmap.AbstractHeightMap;
 import com.jme3.terrain.heightmap.ImageBasedHeightMap;
 import com.jme3.texture.Texture;
+import com.sun.accessibility.internal.resources.accessibility;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -60,6 +65,9 @@ public class GameAppState extends AbstractAppState {
         
         //Store the passed in application
         this.app = (SimpleApplication) app;
+        
+        //Register the input devices
+        initKeys();
         
         ////////////////////////////////////////////////////////////////////////
         //Load all the nodes////////////////////////////////////////////////////
@@ -282,5 +290,42 @@ public class GameAppState extends AbstractAppState {
         building.setLocalTranslation(new Vector3f(x,y,z));
         
         return building;
+    }
+    
+    ActionListener actionListener = new ActionListener() {
+
+        public void onAction(String name, boolean isPressed, float tpf) {
+            if(isPressed)
+            {
+                if(name.equals("Click"))
+                {
+                    CollisionResults results = new CollisionResults();
+                    
+                    Vector2f click2d = app.getInputManager().getCursorPosition();
+                    Vector3f click3d = app.getCamera().getWorldCoordinates(
+                            new Vector2f(click2d.x, click2d.y),0).clone();
+                    Vector3f dir = app.getCamera().getWorldCoordinates(
+                            new Vector2f(click2d.x, click2d.y), 1f).subtractLocal(click3d).normalizeLocal();
+                    
+                    Ray ray = new Ray(click3d, dir);
+                    
+                    app.getRootNode().collideWith(ray, results);
+                    
+                    logger.log(Level.INFO, "Doom destruction and collisions...");
+                    for (int i = 0; i < results.size(); i++) {
+                        logger.log(Level.INFO, "Collision {0}", new Object[]{results.getCollision(i)});
+                    }
+                }
+            }
+        }
+    };
+    
+    private void initKeys()
+    {
+        InputManager inputManager = this.app.getInputManager();
+        inputManager.addMapping("Click", new KeyTrigger(MouseInput.BUTTON_LEFT));
+        inputManager.setCursorVisible(true);
+        
+        inputManager.addListener(actionListener, new String[]{"Click"});
     }
 }
